@@ -1,4 +1,4 @@
-package infra
+package utils
 
 import (
 	"log"
@@ -7,6 +7,16 @@ import (
 
 	"github.com/segmentio/kafka-go"
 )
+
+func GetKafkaWriter(kafkaURL, topic string) *kafka.Writer {
+	l := log.New(os.Stdout, "kafka writer: ", 0)
+	return &kafka.Writer{
+		Addr:     kafka.TCP(kafkaURL),
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
+		Logger:   l,
+	}
+}
 
 func GetKafkaReader(kafkaURL, topic, groupID string) *kafka.Reader {
 	brokers := strings.Split(kafkaURL, ",")

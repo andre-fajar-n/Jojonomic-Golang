@@ -7,7 +7,7 @@ import (
 
 type response struct {
 	Error   bool        `json:"error"`
-	ReffID  string      `json:"reff_id"`
+	ReffID  string      `json:"reff_id,omitempty"`
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 }

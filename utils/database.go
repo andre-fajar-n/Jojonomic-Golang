@@ -1,11 +1,8 @@
-package infra
+package utils
 
 import (
 	"fmt"
-	"log"
-	"os"
 
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -17,17 +14,12 @@ var DB *gorm.DB
 func InitializeDatabase() {
 	fmt.Println("Start Connecting to DB...")
 
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable ",
-		os.Getenv("db_host"),
-		os.Getenv("db_username"),
-		os.Getenv("db_password"),
-		os.Getenv("db_name"),
-		os.Getenv("db_port"),
+		Config.Database.Host,
+		Config.Database.Username,
+		Config.Database.Password,
+		Config.Database.Name,
+		Config.Database.Port,
 	)
 
 	cfg := &gorm.Config{

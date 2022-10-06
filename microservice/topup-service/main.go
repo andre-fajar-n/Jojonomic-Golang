@@ -4,26 +4,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"jojonomic/utils"
+	"jojonomic/utils/model"
 	"log"
 	"net/http"
-	"topup-service/infra"
-	"topup-service/model"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/kafka-go"
+	"github.com/teris-io/shortid"
 )
 
 func main() {
 	r := mux.NewRouter()
 
-	infra.InitializeDatabase()
+	utils.InitConfig()
+
+	utils.InitializeDatabase()
 
 	r.HandleFunc("/api/topup", handlerTopup).Methods("POST")
 
-	err := http.ListenAndServe("localhost:8082", r)
-	if err != nil {
-		panic(err)
-	}
+	log.Fatal(http.ListenAndServe("localhost:8082", r))
 }
 
 func handlerTopup(w http.ResponseWriter, r *http.Request) {
@@ -37,54 +37,64 @@ func handlerTopup(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	// get data harga
 	var harga model.TblHarga
-	err := infra.DB.Model(&model.TblHarga{}).Last(&harga).Error
+	err := utils.DB.Model(&model.TblHarga{}).Last(&harga).Error
 	if err != nil {
 		fmt.Println("error get latest harga:", err)
-		utils.WriteErrorResponse(w, "Bad request", err)
+		utils.WriteErrorResponse(w, "", err)
 		return
 	}
 
+	// validate harga from table and request
 	if harga.HargaTopup != req.Harga {
 		err = fmt.Errorf("harga topup tidak sesuai dengan harga topup saat ini")
-		utils.WriteErrorResponse(w, "Bad request", err)
+		utils.WriteErrorResponse(w, "", err)
 		return
 	}
 
+	// get data rekening
 	var rekening model.TblRekening
-	err = infra.DB.Find(&rekening).Where("norek = $1", req.Norek).Error
+	err = utils.DB.Find(&rekening).Where("norek = $1", req.Norek).Error
 	if err != nil {
-		utils.WriteErrorResponse(w, "Bad request", err)
+		utils.WriteErrorResponse(w, "", err)
 		return
 	}
 
-	kafkaWriter := infra.GetKafkaWriter("topup")
+	id, err := shortid.Generate()
+	if err != nil {
+		fmt.Println("error Generate uuid")
+		utils.WriteErrorResponse(w, "", err)
+		return
+	}
+
+	kafkaWriter := utils.GetKafkaWriter(utils.Config.Kafka.URL, utils.Config.Kafka.TopicTopup)
 	defer kafkaWriter.Close()
 
 	byteData, err := json.Marshal(model.TblTransaksi{
+		ReffID:       id,
 		Norek:        req.Norek,
 		Type:         "topup",
 		GoldWeight:   req.Gram,
 		HargaTopup:   harga.HargaTopup,
 		HargaBuyback: harga.HargaBuyback,
 		GoldBalance:  rekening.GoldBalance + req.Gram,
+		CreatedAt:    time.Now().Unix(),
 	})
 	if err != nil {
 		log.Fatal("error marshal:", err)
-		utils.WriteErrorResponse(w, "Bad request", err)
+		utils.WriteErrorResponse(w, id, err)
 		return
 	}
 
 	msg := kafka.Message{
-		Key:   []byte("topup"),
+		Key:   []byte(id),
 		Value: byteData,
 	}
 	err = kafkaWriter.WriteMessages(r.Context(), msg)
-
 	if err != nil {
-		utils.WriteErrorResponse(w, "Bad request", err)
-		w.Write([]byte(err.Error()))
-		log.Fatalln(err)
+		utils.WriteErrorResponse(w, id, err)
+		return
 	}
 
 	utils.WriteSuccessResponse(w, "Success topup")
