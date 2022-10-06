@@ -11,3 +11,7 @@ type InputHargaRequest struct {
 	HargaTopup   float64 `json:"harga_topup"`
 	HargaBuyback float64 `json:"harga_buyback"`
 }
+
+type CheckSaldoRequest struct {
+	Norek string `json:"norek"`
+}
