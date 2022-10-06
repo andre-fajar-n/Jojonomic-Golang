@@ -7,6 +7,8 @@ import (
 	"jojonomic/utils"
 	"jojonomic/utils/model"
 	"log"
+
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -38,12 +40,27 @@ func subscribeData() {
 			continue
 		}
 
-		err = utils.DB.Create(req).Error
-		if err != nil {
-			fmt.Println("error insert data to db:", err)
+		if err := saveTopup(utils.DB, &req); err != nil {
+			fmt.Println("error save topup")
 			continue
 		}
 
 		fmt.Printf("message at topic:%v partition:%v offset:%v	%s = %s\n", m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value))
 	}
+}
+
+func saveTopup(db *gorm.DB, req *model.TblTransaksi) error {
+	conn := db.Begin()
+
+	if err := conn.Create(req).Error; err != nil {
+		conn.Rollback()
+		return err
+	}
+
+	if err := conn.Model(&model.TblRekening{}).Where("norek = ?", req.Norek).Update("gold_balance", req.GoldBalance).Error; err != nil {
+		conn.Rollback()
+		return err
+	}
+
+	return conn.Commit().Error
 }

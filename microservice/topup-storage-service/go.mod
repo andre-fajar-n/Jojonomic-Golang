@@ -2,7 +2,10 @@ module topup-storage-service
 
 go 1.19
 
-require jojonomic/utils v0.0.0-00010101000000-000000000000
+require (
+	gorm.io/gorm v1.23.10
+	jojonomic/utils v0.0.0-00010101000000-000000000000
+)
 
 require (
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
@@ -22,7 +25,6 @@ require (
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gorm.io/driver/postgres v1.3.10 // indirect
-	gorm.io/gorm v1.23.10 // indirect
 )
 
 replace jojonomic/utils => ../../utils
