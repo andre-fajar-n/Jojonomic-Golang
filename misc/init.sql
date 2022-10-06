@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS tbl_rekening (
     reff_id VARCHAR (15)  PRIMARY KEY NOT NULL,
     norek VARCHAR (15) UNIQUE NOT NULL,
     customer_name VARCHAR (20) NOT NULL,
-    gold_balance DECIMAL(12, 2) DEFAULT 0,
+    gold_balance DECIMAL(12, 3) DEFAULT 0,
     created_at TIMESTAMP
 );
 CREATE TABLE if NOT EXISTS tbl_transaksi (
@@ -19,6 +19,6 @@ CREATE TABLE if NOT EXISTS tbl_transaksi (
     gold_weight FLOAT,
     harga_topup DECIMAL(12, 2) NOT NULL,
     harga_buyback DECIMAL(12, 2) NOT NULL,
-    gold_balance DECIMAL(12, 2) DEFAULT 0,
+    gold_balance DECIMAL(12, 3) DEFAULT 0,
     created_at INTEGER
 );

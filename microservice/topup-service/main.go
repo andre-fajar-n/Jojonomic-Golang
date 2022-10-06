@@ -6,6 +6,7 @@ import (
 	"jojonomic/utils"
 	"jojonomic/utils/model"
 	"log"
+	"math"
 	"net/http"
 	"time"
 
@@ -23,7 +24,7 @@ func main() {
 
 	r.HandleFunc("/api/topup", handlerTopup).Methods("POST")
 
-	log.Fatal(http.ListenAndServe("localhost:8082", r))
+	log.Fatal(http.ListenAndServe("localhost:8002", r))
 }
 
 func handlerTopup(w http.ResponseWriter, r *http.Request) {
@@ -39,10 +40,16 @@ func handlerTopup(w http.ResponseWriter, r *http.Request) {
 
 	// get data harga
 	var harga model.TblHarga
-	err := utils.DB.Model(&model.TblHarga{}).Last(&harga).Error
+	err := utils.DB.Model(&model.TblHarga{}).Order("created_at DESC").Find(&harga).Error
 	if err != nil {
 		fmt.Println("error get latest harga:", err)
 		utils.WriteErrorResponse(w, "", err)
+		return
+	}
+
+	temp := 1000 * req.Gram
+	if temp != math.Trunc(temp) {
+		utils.WriteErrorResponse(w, "", fmt.Errorf("topup harus kelipatan 0.001"))
 		return
 	}
 
@@ -97,5 +104,5 @@ func handlerTopup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteSuccessResponse(w, "Success topup")
+	utils.WriteSuccessResponse(w, id)
 }
