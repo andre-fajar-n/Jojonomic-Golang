@@ -66,7 +66,7 @@ func handlerTopup(kafkaWriter *kafka.Conn) func(w http.ResponseWriter, r *http.R
 
 		// get data rekening
 		var rekening model.TblRekening
-		err = utils.DB.Find(&rekening).Where("norek = $1", req.Norek).Error
+		err = utils.DB.Where("norek = $1", req.Norek).Find(&rekening).Error
 		if err != nil {
 			utils.WriteErrorResponse(w, "", err)
 			return

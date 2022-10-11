@@ -62,11 +62,12 @@ func handlerTopup(w http.ResponseWriter, r *http.Request) {
 
 	// get data rekening
 	var rekening model.TblRekening
-	err = utils.DB.Find(&rekening).Where("norek = $1", req.Norek).Error
+	err = utils.DB.Where("norek = $1", req.Norek).Find(&rekening).Error
 	if err != nil {
 		utils.WriteErrorResponse(w, "", err)
 		return
 	}
+	fmt.Println("REKENING", rekening, req.Norek)
 
 	id, err := shortid.Generate()
 	if err != nil {
@@ -88,6 +89,7 @@ func handlerTopup(w http.ResponseWriter, r *http.Request) {
 		GoldBalance:  rekening.GoldBalance + req.Gram,
 		CreatedAt:    time.Now().Unix(),
 	})
+	fmt.Println("CEK", rekening.GoldBalance, req.Gram, rekening.GoldBalance+req.Gram)
 	if err != nil {
 		log.Fatal("error marshal:", err)
 		utils.WriteErrorResponse(w, id, err)

@@ -24,7 +24,7 @@ func main() {
 func handlerCheckHarga(w http.ResponseWriter, r *http.Request) {
 	var data model.TblHarga
 
-	err := utils.DB.Model(&data).First(&data).Order("created_at DESC").Error
+	err := utils.DB.Model(&data).Order("created_at DESC").First(&data).Error
 	if err != nil {
 		utils.WriteErrorResponse(w, "", err)
 		return
